@@ -57,32 +57,44 @@ app({
             });
         });
         
-        return <ons-navigator oncreate={setRef} onupdate={setRef}>
+        return (
+            <ons-navigator oncreate={setRef} onupdate={setRef}>
                 {pages}
-            </ons-navigator>;
+            </ons-navigator>
+        );
     }
 });
 
 function Page({ title }, children) {
-    return h('ons-page', {}, [
-        h('ons-toolbar', {}, [
-            h('div', { class: 'center' }, title)
-        ]),
-        h('div', {}, null),
-        h('div', { class: 'content' }, children)
-    ]);
+    return (
+        <ons-page>
+            <ons-toolbar>
+                <div class="center">
+                    {title}
+                </div>
+            </ons-toolbar>
+            <div></div>
+            <div class="content">
+                {children}
+            </div>
+        </ons-page>
+    );
 }
 
 function Main({ pushPage }) {
-    return <Page title="Main Page">
+    return (
+        <Page title="Main Page">
             <ons-input modifier="underbar" type="text" />
             <ons-button onclick={() => pushPage({ page: Second })}>Push Page</ons-button>
-        </Page>;
+        </Page>
+    );
 }
 
 function Second({ popPage }) {
-    return <Page title="Second Page">
+    return (
+        <Page title="Second Page">
             <p>Second Page</p>
             <ons-button onclick={popPage}>Pop Page</ons-button>
-        </Page>;
+        </Page>
+    );
 }
