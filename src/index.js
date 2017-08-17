@@ -8,7 +8,7 @@ require('onsenui/css/onsenui.css');
 
 app({
     actions: {
-        popPage: ({ pages }, actions, { ref }) => {
+        popPage: ({ pages }, actions, { navigator }) => {
             return update => {
                 const fn = () => {
                     return new Promise((resolve) => {
@@ -19,11 +19,10 @@ app({
                     });  
                 };
                 
-                ref._popPage({}, fn);
+                navigator()._popPage({}, fn);
             };
         },
-        pushPage: ({ pages }, actions, { ref, page }) => {
-            console.log(ref);
+        pushPage: ({ pages }, actions, { navigator, page }) => {
             return update => {
                 const fn = () => {
                     return new Promise((resolve) => {
@@ -34,7 +33,7 @@ app({
                     });  
                 };
                 
-                ref._pushPage({}, fn);
+                navigator()._pushPage({}, fn);
             };
         }
     },
@@ -42,28 +41,23 @@ app({
         pages: [Main]
     },
     view: (state, { popPage, pushPage }) => {
-        let ref;
-        
-        const setRef = (element) => { ref = element; };
-        
-        const pages = state.pages.map((page) => {
-            return page({ 
-                popPage: () => {
-                    popPage({ ref });
-                },
-                pushPage: (options) => {
-                    pushPage(Object.assign({}, options, { ref }));
-                }
-            });
-        });
-        
         return (
-            <ons-navigator oncreate={setRef} onupdate={setRef}>
-                {pages}
-            </ons-navigator>
+            <Navigator pages={state.pages} popPage={popPage} pushPage={pushPage}>
+            </Navigator>
         );
     }
 });
+
+function Navigator(props, children) {
+    const { pages, ...pageProps } = props;
+    pageProps.navigator = observable();
+    
+    return (
+        <ons-navigator oncreate={pageProps.navigator} onupdate={pageProps.navigator}>
+            {pages.map((page) => page(pageProps) )}
+        </ons-navigator>
+    );
+}
 
 function Page({ title }, children) {
     return (
@@ -81,20 +75,31 @@ function Page({ title }, children) {
     );
 }
 
-function Main({ pushPage }) {
+function Main({ navigator, pushPage }) {
     return (
         <Page title="Main Page">
-            <ons-input modifier="underbar" type="text" />
-            <ons-button onclick={() => pushPage({ page: Second })}>Push Page</ons-button>
+            <ons-input modifier="underbar" placeholder="username" type="text" />
+            <ons-button onclick={() => pushPage({ navigator, page: Second })}>Push Page</ons-button>
         </Page>
     );
 }
 
-function Second({ popPage }) {
+function Second({ navigator, popPage }) {
     return (
         <Page title="Second Page">
             <p>Second Page</p>
-            <ons-button onclick={popPage}>Pop Page</ons-button>
+            <ons-button onclick={() => popPage({ navigator }) }>Pop Page</ons-button>
         </Page>
     );
+}
+
+function observable(value) {
+    let _value = value;
+    
+    return (change) => {
+        if (change !== undefined) {
+            _value = change;
+        }
+        return _value;
+    };
 }
